@@ -1,52 +1,97 @@
-# Copyright 2015, Google Inc.
-# All rights reserved.
-#
-# Redistribution and use in source and binary forms, with or without
-# modification, are permitted provided that the following conditions are
-# met:
-#
-#     * Redistributions of source code must retain the above copyright
-# notice, this list of conditions and the following disclaimer.
-#     * Redistributions in binary form must reproduce the above
-# copyright notice, this list of conditions and the following disclaimer
-# in the documentation and/or other materials provided with the
-# distribution.
-#     * Neither the name of Google Inc. nor the names of its
-# contributors may be used to endorse or promote products derived from
-# this software without specific prior written permission.
-#
-# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-# "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-# LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-# A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-# OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-# SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-# LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-# DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-# THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-# (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-"""The Python implementation of the GRPC helloworld.Greeter client."""
-
 from __future__ import print_function
 
 import grpc
+import configuracoesGrpc_pb2
+import configuracoesGrpc_pb2_grpc
 
-import helloworld_pb2
-import helloworld_pb2_grpc
-
+# Formatar print do selectNota
 
 def client():
   #configura o canal de comunicacao
   channel = grpc.insecure_channel('localhost:7777')
   
   #inicializa e configura o stub
-  stub = helloworld_pb2_grpc.GreeterStub(channel)
+  stub = configuracoesGrpc_pb2_grpc.GerenciadorDeNotasStub(channel)
   
-  #chamada remota
-  response = stub.SayHello(helloworld_pb2.HelloRequest(name='Zoro'))
-  print("Recebido: " + response.message)
+  print("[insertNota] Matricula o aluno em uma disciplina e adiciona a sua nota\n")
+  print("[selectNota] Faz a consulta da nota de um aluno\n")
+  print("[rmNota] Remove a nota de um aluno\n")
+  print("[updateNota] Atualiza a nota de um aluno\n")
+  print("[selectNotasFaltas] Lista as notas e faltas de uma disciplina em um ano/semestre\n")
+  print("[listAlunos] Lista os alunos de uma disciplina em um ano/semestre\n")
+
+  while(True):
+    opCode = input("Que operação deseja fazer? > ")
+
+    if (opCode == "insertNota"):
+      RA = input("RA do aluno > ")
+      discCode = input("Código da Disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("Semestre > ")
+      nota = input("Nota > ")
+
+      #chamada remota
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, RA=int(RA), nota=float(nota), ano=int(ano), semestre=int(semestre)))
+
+    elif (opCode == "selectNota"):
+      RA = input("RA do aluno > ")
+      discCode = input("Código da Disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("Semestre > ")
+
+      #chamada remota
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, RA=int(RA), ano=int(ano), semestre=int(semestre)))
+
+    elif (opCode == "rmNota"):
+      RA = input("RA do aluno > ")
+      discCode = input("Código da Disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("Semestre > ")
+
+      #chamada remota
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, RA=int(RA), ano=int(ano), semestre=int(semestre)))
+      print("Recebido: " + response.message)
+    
+    elif (opCode == "updateNota"):
+      RA = input("RA do aluno > ")
+      discCode = input("Código da Disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("Semestre > ")
+      nota = input("Nota > ")
+
+      #chamada remota
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, RA=int(RA), ano=int(ano), semestre=int(semestre), nota=float(nota)))
+
+    elif (opCode == "selectNotasFaltas"):
+      discCode = input("Código da Disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("Semestre > ")
+
+      #chamada remota
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, ano=int(ano), semestre=int(semestre)))
+
+    elif (opCode == "listAlunos"):
+      discCode = input("Codigo da disciplina > ")
+      ano = input("Ano > ")
+      semestre = input("semestre > ")
+
+      response = stub.Mensagem(configuracoesGrpc_pb2.Requisicao(opCode=opCode, discCode=discCode, ano=int(ano), semestre=int(semestre)))
+
+    elif (opCode == "exit"):
+      break
+    
+    else:
+      continue
+    
+    print("\nRecebido: " + response.message)
+
+    if(opCode == "selectNota" or opCode == "selectNotasFaltas"):
+      for x in response.matricula:
+        print(x)
+    
+    if(opCode == "listAlunos"):
+      for x in response.alunos:
+        print(x)
 
 
 if __name__ == '__main__':

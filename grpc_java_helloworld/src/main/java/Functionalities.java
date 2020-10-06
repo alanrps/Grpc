@@ -12,9 +12,13 @@ import java.sql.*;
 //Fazer verificações campos vazios
 //Adicionar Primary Key's tabela matricula
 //Verificação caso ocorra erro ao buscar nota
+//Verificar porque está dando erro ao mandar caracteres no código da disciplina
+//Verificar se já há cadastro com os dados
 
 public class Functionalities {
 
+  // Faz o cadastro da nota de um determinado aluno, basicamente cadastra uma nova matricula
+  //- Necessita de um aluno e uma disciplina
   public static String insertNota(Requisicao req, Resposta.Builder res, Connection dbConnection){
     int RA = req.getRA();
     String discCode = req.getDiscCode();
@@ -32,24 +36,21 @@ public class Functionalities {
       ResultSet resultSet = statement.executeQuery("SELECT * FROM aluno WHERE (ra = " + String.valueOf(RA) + ");");
       if(!resultSet.isBeforeFirst()){ 
         res.setMessage("RA inexistente");
+        System.out.println("Ra inexistente");
+
         return "RA inexistente";
       }
-
+     
       /* Busca pela disiplina */
       resultSet = statement.executeQuery("SELECT * FROM disciplina WHERE (codigo = '" + String.valueOf(discCode) + "');");
       if(!resultSet.isBeforeFirst()){
         res.setMessage("Disciplina inexistente");
+        System.out.println("Disciplina inexistente");
+
         return "Disciplina inexistente";
       }
 
-      /* Busca pela matricula */
-      resultSet = statement.executeQuery("SELECT * FROM matricula WHERE (ra_aluno = " + String.valueOf(RA) + " AND cod_disciplina = '" + String.valueOf(discCode) + "' AND ano = "+ String.valueOf(ano) +" AND semestre = "+ String.valueOf(semestre) +");");
-      if(!resultSet.isBeforeFirst()){
-        res.setMessage("Matricula do aluno em " + String.valueOf(ano) + "/" + String.valueOf(semestre) + " inexistente");
-        return ("Matricula do aluno em " + String.valueOf(ano) + "/" + String.valueOf(semestre) + " inexistente");
-      }
-
-      /* Atualiza nota */
+      /* Cria a matricula e insere a nota juntamente */
       statement.execute("INSERT INTO matricula(ra_aluno,ano,semestre,cod_disciplina,nota,faltas) VALUES(" + String.valueOf(RA) + "," + String.valueOf(ano) + "," + String.valueOf(semestre) + "," + String.valueOf(discCode) + "," + String.valueOf(nota) + "," + String.valueOf(0) + ");");
       res.setMessage("1");
       
@@ -76,7 +77,7 @@ public class Functionalities {
 
       /* Busca pelo aluno */
       ResultSet resultSet = statement.executeQuery("SELECT * FROM aluno WHERE (ra = " + String.valueOf(RA) + ");");
-      if(!resultSet.isBeforeFirst()){ //************** Verificar
+      if(!resultSet.isBeforeFirst()){ 
         res.setMessage("RA inexistente");
         return "RA inexistente";
       }
@@ -96,13 +97,13 @@ public class Functionalities {
       }
 
       /* Consulta nota */
-      resultSet = statement.executeQuery("SELECT * FROM matricula WHERE(ra_aluno = " + String.valueOf(RA) + "AND cod_disciplina = " + String.valueOf(discCode) + " AND semestre = " + String.valueOf(semestre) + " AND ano = "+ String.valueOf(ano) +");");
+      resultSet = statement.executeQuery("SELECT * FROM matricula WHERE(ra_aluno = " + String.valueOf(RA) + " AND cod_disciplina = " + String.valueOf(discCode) + " AND semestre = " + String.valueOf(semestre) + " AND ano = "+ String.valueOf(ano) +");");
 
        /* Construindo Aluno */
        Matricula.Builder matricula = Matricula.newBuilder();
         
        /* Adicionando valores no aluno */
-       matricula.setRA(resultSet.getInt("ra"));
+       matricula.setRA(resultSet.getInt("ra_aluno"));
        matricula.setNota(resultSet.getFloat("nota"));
        matricula.setFaltas(resultSet.getInt("faltas"));
        matricula.setCodDisciplina(resultSet.getString("cod_disciplina"));
@@ -229,7 +230,7 @@ public class Functionalities {
       }
 
       /* Lista notas e faltas de uma determinada disciplina em um ano e semestre */
-      resultSet = statement.executeQuery("SELECT * FROM disciplina, matricula WHERE (SELECT nota, faltas, ra FROM matricula WHERE ano = " + String.valueOf(ano) + " AND semestre = " + String.valueOf(semestre) + " AND cod_disciplina = '" + String.valueOf(discCode) + "') AND disciplina.codigo = matricula.cod_disciplina;");
+      resultSet = statement.executeQuery("SELECT * FROM disciplina, matricula WHERE (SELECT cod_disciplina FROM matricula WHERE ano = " + String.valueOf(ano) + " AND semestre = " + String.valueOf(semestre) + " AND cod_disciplina = '" + String.valueOf(discCode) + "') AND disciplina.codigo = matricula.cod_disciplina;");
       if(!resultSet.isBeforeFirst()){
         res.setMessage("Nesta disciplina nao ha alunos matriculados em " + String.valueOf(ano) + "/" + String.valueOf(semestre));
         return ("Nesta disciplina nao ha alunos matriculados em " + String.valueOf(ano) + "/" + String.valueOf(semestre));
@@ -241,12 +242,12 @@ public class Functionalities {
         Matricula.Builder matricula = Matricula.newBuilder();
         
         /* Adicionando valores a matricula */
-        matricula.setRA(resultSet.getInt("ra"));
+        matricula.setRA(resultSet.getInt("ra_aluno"));
         matricula.setNota(resultSet.getFloat("nota"));
         matricula.setFaltas(resultSet.getInt("faltas"));
-        matricula.setCodDisciplina(discCode);
-        matricula.setAno(ano);
-        matricula.setSemestre(semestre);
+        matricula.setCodDisciplina(resultSet.getString("cod_disciplina"));
+        matricula.setAno(resultSet.getInt("ano"));
+        matricula.setSemestre(resultSet.getInt("semestre"));
 
         /* Adicionando matricula */
         res.addMatricula(matricula);
@@ -309,5 +310,4 @@ public class Functionalities {
     }
     return "1";
   }
-
 }

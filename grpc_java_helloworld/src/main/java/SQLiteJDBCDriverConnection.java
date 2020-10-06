@@ -15,7 +15,7 @@ public class SQLiteJDBCDriverConnection {
   public static Connection connect() {    
     try {
 
-      connection = DriverManager.getConnection("jdbc:sqlite:../database/gerenciamento_notas.db");
+      connection = DriverManager.getConnection("jdbc:sqlite:./src/main/database/gerenciamento_notas.db");
 
       System.out.println("Conexão com o banco de dados realizada!");
 
